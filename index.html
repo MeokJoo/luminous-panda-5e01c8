@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>미니카 챔피언</title>
+<style>
+:root{--bg:#0b0820;--p:#171038;--c:#00f0ff;--m:#ff2bd6;--g:#ffd54a;--t:#eef;--s:#9a94c4}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:radial-gradient(circle at 50% 0,#251a66,var(--bg) 70%);color:var(--t);font-family:system-ui,"Noto Sans KR",sans-serif;min-height:100vh}
+main{max-width:480px;margin:auto;padding:12px 12px 40px}
+.top{display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.g{color:var(--g)}.s{color:var(--s);font-size:13px}
+#stage{background:linear-gradient(#140d38,#2a1d6e);border:1px solid var(--c);border-radius:14px;box-shadow:0 0 18px #00f0ff44;margin:10px 0;text-align:center;padding:6px}
+#stage b{font-size:26px;color:var(--c);text-shadow:0 0 10px var(--c)}
+svg{width:100%;height:auto;display:block}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+button{font:inherit;cursor:pointer;border:1px solid var(--c);background:var(--p);color:var(--t);border-radius:10px;padding:10px;font-weight:700}
+button.on{background:var(--c);color:#06041a}
+button.big{width:100%;padding:16px;font-size:18px;background:linear-gradient(90deg,var(--m),#7a2cff);border:0;color:#fff;box-shadow:0 0 16px #ff2bd666}
+button:disabled{opacity:.45}
+.card{background:var(--p);border:1px solid #3a2f85;border-radius:12px;padding:12px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #2b2370}
+.row:last-child{border:0}
+.row button{padding:6px 10px;font-size:13px}
+#box{font-size:64px;text-align:center;min-height:84px}
+.shake{animation:sh .4s infinite}
+@keyframes sh{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.pulse{animation:pl 1.2s infinite alternate}
+@keyframes pl{to{opacity:.45}}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#000c;border:1px solid var(--g);padding:10px 16px;border-radius:20px;font-weight:800;z-index:9;display:none;max-width:90%;text-align:center}
+#ov{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;z-index:8;padding:16px}
+#ov>div{background:var(--p);border:1px solid var(--m);border-radius:14px;padding:16px;width:100%;max-width:440px}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--c);background:#0b0820;color:#fff;font-size:16px;margin:10px 0}
+.nt{width:120px;margin-left:-18px;font-size:11px;font-weight:800;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane{position:relative;height:74px;border-bottom:2px dashed #4b3fb0;margin:6px 0}
+.lane .c{position:absolute;left:0;width:84px;transform:translateX(0);transition:left 3s cubic-bezier(.4,0,.3,1)}
+.flash{animation:fl .8s}
+@keyframes fl{0%{box-shadow:inset 0 0 0 100vmax #ffd54acc}100%{box-shadow:inset 0 0 0 100vmax #ffd54a00}}
+</style></head><body>
+<div id="toast"></div>
+<div id="ov"><div id="ovc"></div></div>
+<div id="upd" style="display:none;position:fixed;inset:0;background:#000d;align-items:center;justify-content:center;z-index:20;padding:16px"><div class="card" style="max-width:340px;text-align:center"><h3>🔄 새 버전이 나왔어요</h3><p>잠시 후 자동으로 새로고침됩니다.</p><button class="big" id="rl">지금 새로고침</button></div></div>
+<main>
+<div class="top"><span id="nm">-</span><span class="g" id="gd">0 G</span></div>
+<div id="stage"><div id="cv"></div><b id="lvt">+0</b> <span class="s" id="mode"></span></div>
+<div class="tabs"><button data-t="farm" class="on">파밍</button><button data-t="up">강화</button><button data-t="rank">레이스</button><button data-t="shop">상점</button></div>
+
+<section id="t-farm" class="card">
+  <div id="box">📦</div>
+  <button class="big" id="farm">파밍하기</button>
+  <p class="s">일반 80% 200~20,000G / 희귀 17% 20,001~300,000G / 대박 3% 300,001~2,000,000G (쿨타임 1초)</p>
+</section>
+<section id="t-up" class="card" hidden>
+  <button class="big" id="up">강화하기</button>
+  <div id="ui" class="s" style="text-align:center;white-space:nowrap;font-size:12px;margin:10px 0 4px"></div>
+  <p class="s">4→5강부터 하락 확률이 있고(13~16강에서 하락하면 12강), 16→17강부터는 하락 대신 파괴 확률이 있고 단계가 오를수록 높아집니다. 최대 +30강입니다. 파괴되면 +0강이 되고 차량 종류가 바뀝니다.</p>
+</section>
+<section id="t-rank" class="card" hidden>
+  <button class="big" id="rnd" style="margin-bottom:10px">🎲 랜덤 경주 시작</button><div id="lb"></div>
+  <p class="s">상대는 랜덤으로 정해집니다. 레벨이 높은 쪽이 약 75% 유리하고, 낮은 쪽도 약 25% 확률로 이길 수 있습니다. (같은 레벨이면 50:50) 승리 상금은 내 강화 단계가 높을수록 많아집니다. (경주 쿨타임 10초) 승리 시 트로피 +1, 골드 보상.</p>
+</section>
+<section id="t-shop" class="card" hidden>
+  <div>🏆 트로피 <b id="tr">0</b></div><div id="sh"></div>
+  <h4>내 쿠폰</h4><div id="cp"></div>
+</section>
+<div class="card"><b>실시간 소식</b><div id="fd" class="s"></div></div>
+</main>
+
+<script>
+// ============ 여기에 본인 Firebase 설정을 붙여넣으세요 (비워두면 데모 모드) ============
+const firebaseConfig = {
+  apiKey: "AIzaSyCEF8Ooi1TKh2YOLPoDou897XKeXegQXmo",
+  authDomain: "bungbungka-ba680.firebaseapp.com",
+  projectId: "bungbungka-ba680",
+  storageBucket: "bungbungka-ba680.firebasestorage.app",
+  messagingSenderId: "1070034435590",
+  appId: "1:1070034435590:web:2dd84fd15628b2a05c4d87",
+  measurementId: "G-Z66GDLD4B4",
+  databaseURL: "https://bungbungka-ba680-default-rtdb.firebaseio.com"
+};
+// =====================================================================================
+const $=s=>document.querySelector(s), rand=n=>Math.floor(Math.random()*n), fmt=n=>(n||0).toLocaleString("ko-KR");
+let ac;function snd(f,d=.15,t="square",v=.07,o=0){try{ac=ac||new AudioContext();const x=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+o;x.type=t;x.frequency.value=f;g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);x.connect(g);g.connect(ac.destination);x.start(s);x.stop(s+d)}catch(e){}}
+const fx={ok:()=>[523,659,784,1046].forEach((f,i)=>snd(f,.15,"square",.07,i*.08)),bad:()=>[300,200,120].forEach((f,i)=>snd(f,.2,"sawtooth",.07,i*.1)),jack:()=>[392,523,659,784,1046,1318].forEach((f,i)=>snd(f,.2,"triangle",.1,i*.07)),tick:()=>snd(700,.05),go:()=>[200,260,330].forEach((f,i)=>snd(f,.3,"sawtooth",.05,i*.2))};
+function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display="none",2200)}
+
+// ---------- 저장소: Firebase 또는 LocalStorage 데모 ----------
+const L={d:JSON.parse(localStorage.mcdb||"{}"),cbs:[],get(p){return p.split("/").reduce((o,k)=>o&&o[k],this.d)},
+ set(p,v){const k=p.split("/");let o=this.d;k.slice(0,-1).forEach(x=>o=o[x]=o[x]||{});o[k.at(-1)]=v;localStorage.mcdb=JSON.stringify(this.d);this.cbs.forEach(c=>c())},
+ sub(p,cb){const f=()=>cb(this.get(p)??null);this.cbs.push(f);f()}};
+addEventListener("storage",()=>{L.d=JSON.parse(localStorage.mcdb||"{}");L.cbs.forEach(c=>c())});
+const F={set:(p,v)=>firebase.database().ref(p).set(v),sub(p,cb){let r=firebase.database().ref(p);if(p=="feed")r=r.limitToLast(10);r.on("value",s=>cb(s.val()))}};
+const ld=u=>new Promise((r,j)=>{const s=document.createElement("script");s.src=u;s.onload=r;s.onerror=j;document.head.append(s)});
+let DB=L,users={},me,uid=localStorage.mcuid;
+const APP_VERSION="2026-11-19-11";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+
+// ---------- 규칙 ----------
+const MAXLV=30, COSTS=[28000,42000,70000,112000,168000,227000,297000,385000,454000,559000,664000,804000,979000,1154000,1363000,1608000,1643000,1818000,2028000,2272000,2540000,2830000,3140000,3470000,3820000,4190000,4580000,4990000,5420000,5870000];
+const cost=n=>COSTS[n-1], sr=n=>[100,90,85,80,70,62,55,48,40,36,32,28,26,24,22,20,16,14,12,10,9,8,7,6,5,4,3,2,1.5,1][n-1], dr=n=>[0,0,0,0,2,3,4,5,3,4,5,6,2,3,4,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0][n-1], de=n=>[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2.5,5,7.5,10,12,14,16,18,20,22,24,26,28,30][n-1], dt=n=>[0,0,0,0,3,4,5,6,7,8,9,10,12,12,12,12,0,0,0,0,0,0,0,0,0,0,0,0,0,0][n-1], mt=n=>Math.round((100-sr(n)-dr(n)-de(n))*10)/10;
+const SHOP=[{id:"coffee",n:"☕ 아메리카노 기프티콘권",c:5},{id:"chicken",n:"🍗 치킨 내기 면제권",c:12},{id:"snack",n:"🍪 간식 조공권",c:3}];
+function save(){DB.set("users/"+uid,me)}
+function feed(m){DB.set("feed/"+Date.now()+rand(99),m)}
+
+// ---------- 미니카 SVG (강화 단계별 진화) ----------
+const TYPES=["미니카","스포츠카","포크레인","골프카트","덤프트럭","탱크","경찰차","버스"];
+const TN=["기본형","에어로 튜닝","듀얼 부스터","LED 휠 풀튜닝","플라즈마 골드","궁극의 챔피언"];
+function car(lv,ty){
+ ty=ty||0;if(ty==0)return carBase(lv);
+ const t=lv>=20?5:lv>=16?4:lv>=12?3:lv>=8?2:lv>=4?1:0;
+ const C=[["#e53935","#ff8a80"],["#1e88e5","#82b1ff"],["#8e24aa","#ea80fc"],["#00bfa5","#64ffda"],["#ffb300","#fff59d"],["#f5f5f5","#ffd54a"]][t];
+ const fl=14+lv*5, fc=t>=4?["#00f0ff","#b388ff"]:["#ffb300","#ff3d00"],D="#0e1a3a",a=C[0],b=C[1];
+ let body="",wx=[86,216],r=22;
+ if(ty==1){body=`<path d="M36 108 L44 92 Q90 78 140 74 Q170 56 206 74 Q250 84 268 104 L268 114 L36 114Z" fill="${a}" stroke="${b}" stroke-width="2"/><path d="M146 76 Q172 60 202 76Z" fill="${D}"/><rect x="60" y="96" width="190" height="4" fill="${b}"/>`+(lv>=4?`<rect x="30" y="74" width="42" height="5" fill="${b}"/><rect x="46" y="79" width="4" height="15" fill="#444"/>`:"")}
+ else if(ty==2){wx=[84,130,176];r=16;body=`<rect x="50" y="86" width="150" height="26" rx="6" fill="${a}" stroke="${b}" stroke-width="2"/><path d="M60 86 L66 54 L116 54 L126 86Z" fill="${a}" stroke="${b}" stroke-width="2"/><rect x="72" y="60" width="38" height="22" fill="${D}"/><path d="M190 90 L232 50 L262 70" stroke="${b}" stroke-width="9" fill="none" stroke-linejoin="round"/><path d="M258 66 L284 74 L270 98 L252 84Z" fill="${b}"/>`}
+ else if(ty==3){wx=[90,224];r=16;body=`<path d="M50 112 L50 86 Q60 80 130 80 L215 80 Q250 84 258 100 L258 112Z" fill="${a}" stroke="${b}" stroke-width="2"/><rect x="70" y="40" width="150" height="7" rx="3" fill="${b}"/><rect x="76" y="47" width="4" height="36" fill="#555"/><rect x="212" y="47" width="4" height="36" fill="#555"/><rect x="90" y="66" width="50" height="16" rx="4" fill="${D}"/><rect x="56" y="58" width="12" height="28" rx="3" fill="${b}"/><line x1="58" y1="58" x2="55" y2="44" stroke="#ccc" stroke-width="3"/><line x1="64" y1="58" x2="67" y2="42" stroke="#ccc" stroke-width="3"/>`}
+ else if(ty==4){wx=[78,120,222];r=18;body=`<rect x="40" y="100" width="224" height="12" fill="${a}"/><path d="M42 100 L52 62 L176 66 L180 100Z" fill="${b}" stroke="${a}" stroke-width="3"/><path d="M190 112 L190 62 L236 62 L262 90 L262 112Z" fill="${a}" stroke="${b}" stroke-width="2"/><path d="M198 68 L232 68 L250 90 L198 90Z" fill="${D}"/>`}
+ else if(ty==5){wx=[66,110,154,198,246];r=12;body=`<rect x="40" y="112" width="232" height="26" rx="13" fill="#1a1a1a"/><path d="M50 96 L70 80 L240 80 L262 96 L262 114 L50 114Z" fill="${a}" stroke="${b}" stroke-width="2"/><path d="M110 80 L124 56 L196 56 L208 80Z" fill="${a}" stroke="${b}" stroke-width="2"/><rect x="196" y="63" width="82" height="8" fill="${b}"/><circle cx="160" cy="68" r="6" fill="${D}"/>`}
+ else if(ty==6){body=`<path d="M40 112 L40 94 Q50 86 100 84 L128 62 Q170 56 200 62 L228 84 Q262 88 268 100 L268 112Z" fill="${a}" stroke="${b}" stroke-width="2"/><path d="M134 66 L194 66 L216 84 L118 84Z" fill="${D}"/><rect x="60" y="96" width="190" height="6" fill="#fff"/><rect x="136" y="52" width="20" height="9" rx="3" fill="#ff3030"><animate attributeName="fill" dur=".4s" repeatCount="indefinite" values="#ff3030;#ffffff;#ff3030"/></rect><rect x="156" y="52" width="20" height="9" rx="3" fill="#3060ff"><animate attributeName="fill" dur=".4s" repeatCount="indefinite" values="#ffffff;#3060ff;#ffffff"/></rect>`}
+ else {wx=[88,220];r=20;body=`<rect x="38" y="52" width="230" height="60" rx="10" fill="${a}" stroke="${b}" stroke-width="2"/>`+[52,90,128,166,204].map(x=>`<rect x="${x}" y="62" width="30" height="22" rx="3" fill="${D}"/>`).join("")+`<rect x="238" y="62" width="24" height="34" rx="3" fill="${D}"/><rect x="38" y="96" width="230" height="5" fill="${b}"/>`}
+ const flame=y=>`<polygon points="44,${y-6} ${44-fl},${y} 44,${y+6}" fill="${fc[1]}"><animate attributeName="points" dur=".2s" repeatCount="indefinite" values="44,${y-6} ${44-fl},${y} 44,${y+6};44,${y-6} ${44-fl*.75},${y} 44,${y+6}"/></polygon><polygon points="44,${y-3} ${44-fl*.6},${y} 44,${y+3}" fill="${fc[0]}"/>`;
+ let s=`<svg viewBox="0 0 300 150"><defs><radialGradient id="ag${ty}"><stop offset="0" stop-color="${b}" stop-opacity=".85"/><stop offset="1" stop-color="${b}" stop-opacity="0"/></radialGradient></defs>`;
+ if(lv>=4)s+=`<circle cx="150" cy="85" r="${60+lv*4}" fill="url(#ag${ty})" class="pulse"/>`;
+ s+=flame(100);if(t>=2)s+=flame(108);
+ s+=body;
+ if(lv>=8)s+=`<rect x="26" y="92" width="24" height="10" rx="5" fill="${b}"/>`;
+ if(t>=4)s+=`<polygon points="140,50 150,30 160,50" fill="${b}"/>`;
+ if(t>=5)s+=`<polygon points="150,12 156,28 172,28 160,38 164,54 150,44 136,54 140,38 128,28 144,28" fill="#ffd54a"><animate attributeName="opacity" dur="1s" repeatCount="indefinite" values="1;.5;1"/></polygon>`;
+ for(const x of wx){const y=138-r;s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#111"/><circle cx="${x}" cy="${y}" r="${r*.45}" fill="${b}"/>`;
+  if(lv>=12)s+=`<circle cx="${x}" cy="${y}" r="${r*.78}" fill="none" stroke="#0ff" stroke-width="3" stroke-dasharray="6 6"><animateTransform attributeName="transform" type="rotate" from="0 ${x} ${y}" to="360 ${x} ${y}" dur=".8s" repeatCount="indefinite"/></circle>`}
+ return s+"</svg>"}
+function carBase(lv){
+ const t=lv>=20?5:lv>=16?4:lv>=12?3:lv>=8?2:lv>=4?1:0;
+ const C=[["#e53935","#ff8a80"],["#1e88e5","#82b1ff"],["#8e24aa","#ea80fc"],["#00bfa5","#64ffda"],["#ffb300","#fff59d"],["#f5f5f5","#ffd54a"]][t];
+ const fl=14+lv*5, fc=t>=4?["#00f0ff","#b388ff"]:["#ffb300","#ff3d00"];
+ let s=`<svg viewBox="0 0 300 150"><defs><radialGradient id="ag"><stop offset="0" stop-color="${C[1]}" stop-opacity=".85"/><stop offset="1" stop-color="${C[1]}" stop-opacity="0"/></radialGradient></defs>`;
+ if(lv>=4)s+=`<circle cx="150" cy="85" r="${60+lv*4}" fill="url(#ag)" class="pulse"/>`;
+ const flame=y=>`<polygon points="44,${y-6} ${44-fl},${y} 44,${y+6}" fill="${fc[1]}"><animate attributeName="points" dur=".2s" repeatCount="indefinite" values="44,${y-6} ${44-fl},${y} 44,${y+6};44,${y-6} ${44-fl*.75},${y} 44,${y+6}"/></polygon><polygon points="44,${y-3} ${44-fl*.6},${y} 44,${y+3}" fill="${fc[0]}"/>`;
+ s+=flame(t>=2?88:100); if(t>=2)s+=flame(108);
+ if(lv>=4)s+=`<rect x="34" y="${t>=2?58:62}" width="46" height="6" rx="2" fill="${C[1]}"/><rect x="48" y="64" width="4" height="20" fill="#444"/><rect x="64" y="64" width="4" height="20" fill="#444"/>`;
+ s+=`<path d="M40 100 Q48 74 112 68 L192 68 Q238 72 264 100 L264 114 L40 114Z" fill="${C[0]}" stroke="${C[1]}" stroke-width="2"/>`;
+ if(t>=3)s+=`<polygon points="190,68 270,100 190,100" fill="${C[1]}" opacity=".85"/><polygon points="110,68 190,68 150,52" fill="${C[0]}" stroke="${C[1]}" stroke-width="2"/>`;
+ else if(lv>=4)s+=`<path d="M200 70 Q245 74 266 100 L200 100Z" fill="${C[1]}" opacity=".7"/>`;
+ s+=`<path d="M112 68 Q132 42 172 44 L192 68Z" fill="#0e1a3a" stroke="${C[1]}" stroke-width="2"/>`;
+ if(t>=2)s+=`<polygon points="70,104 150,92 150,100 76,112" fill="${C[1]}" opacity=".9"/><text x="110" y="108" font-size="9" fill="#fff" font-weight="900">MAGNUM</text>`;
+ if(t>=4)s+=`<polygon points="120,66 96,40 140,56" fill="${C[1]}"/><polygon points="184,66 208,40 164,56" fill="${C[1]}"/>`;
+ if(t>=5)s+=`<polygon points="150,12 156,28 172,28 160,38 164,54 150,44 136,54 140,38 128,28 144,28" fill="#ffd54a"><animate attributeName="opacity" dur="1s" repeatCount="indefinite" values="1;.5;1"/></polygon>`;
+ for(const x of[86,216]){s+=`<circle cx="${x}" cy="116" r="22" fill="#111"/><circle cx="${x}" cy="116" r="10" fill="${C[1]}"/>`;
+  if(lv>=12)s+=`<circle cx="${x}" cy="116" r="17" fill="none" stroke="#0ff" stroke-width="3" stroke-dasharray="6 6"><animateTransform attributeName="transform" type="rotate" from="0 ${x} 116" to="360 ${x} 116" dur=".8s" repeatCount="indefinite"/></circle>`}
+ return s+"</svg>"}
+const NAMES=["기본 섀시","에어로 카울 & 리어 윙","듀얼 부스터 & 데칼","V자 풀 카울 & LED 휠","플라즈마 골드 에디션","궁극의 챔피언 머신"];
+
+// ---------- 화면 ----------
+function render(){
+ if(!me)return;
+ $("#nm").textContent=me.name;$("#gd").textContent=fmt(me.gold)+" G";
+ $("#cv").innerHTML=car(me.lv,me.ct);
+ $("#lvt").textContent="+"+me.lv+" "+TYPES[me.ct||0]+" · "+TN[me.lv>=20?5:me.lv>=16?4:me.lv>=12?3:me.lv>=8?2:me.lv>=4?1:0];
+ const n=me.lv+1,max=me.lv>=MAXLV;
+ $("#ui").textContent=max?"":`성공 ${sr(n)}% / 유지 ${mt(n)}% / 하락 ${dr(n)}% / 파괴 ${de(n)}%`;
+ $("#up").disabled=max||me.gold<cost(n);$("#up").textContent=max?"최대 강화 달성!":`다음단계 +${n} 강화하기 (${fmt(cost(n))}G)`;
+ $("#tr").textContent=me.tr||0;
+ const cp=me.cp||{};
+ $("#sh").innerHTML=SHOP.map(i=>`<div class="row"><span>${i.n}</span><button data-b="${i.id}" ${(me.tr||0)<i.c?"disabled":""}>🏆${i.c}</button></div>`).join("");
+ $("#cp").innerHTML=SHOP.filter(i=>cp[i.id]>0).map(i=>`<div class="row"><span>${i.n} x${cp[i.id]}</span><button data-u="${i.id}">사용</button></div>`).join("")||'<span class="s">보유한 쿠폰이 없습니다</span>';
+ const arr=Object.entries(users).sort((a,b)=>b[1].lv-a[1].lv||(b[1].wins||0)-(a[1].wins||0));
+ $("#lb").innerHTML=arr.map(([id,u],i)=>`<div class="row"><span>${i+1}. ${esc(u.name)} <b class="g">+${u.lv}</b> <span class="s">${TYPES[u.ct||0]}</span></span><span class="s">${fmt(u.gold)}G · ${u.wins||0}승 ${u.loss||0}패</span></div>`).join("");
+}
+function feedRender(v){const a=Object.keys(v||{}).sort().reverse().slice(0,8);$("#fd").innerHTML=a.map(k=>`<div>${String(v[k]).replace(/<(?!\/?b>)/g,"&lt;")}</div>`).join("")}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{fx.tick();document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x==b));["farm","up","rank","shop"].forEach(k=>$("#t-"+k).hidden=k!=b.dataset.t)});
+
+// ---------- 파밍 ----------
+let cd=0;
+$("#farm").onclick=()=>{
+ if(Date.now()<cd)return;cd=Date.now()+1000;fx.tick();
+ const r=Math.random();let g,t;
+ if(r<.03){g=300001+rand(1700000);t=3}else if(r<.2){g=20001+rand(280000);t=2}else{g=200+rand(19801);t=1}g=Math.round(g/10)*10;
+ const b=$("#box");b.textContent="📦";b.className="shake";
+ setTimeout(()=>{b.className="";b.textContent=["","🔩","⚙️","🌟"][t];
+  me.gold+=g;save();render();
+  if(t==3){fx.jack();document.body.classList.add("flash");setTimeout(()=>document.body.classList.remove("flash"),900);toast("🌟 황금 모터 대박! +"+fmt(g)+"G");feed(`🌟 <b>${me.name}</b>님이 황금 모터를 발견! +${fmt(g)}G`)}
+  else if(t==2){fx.ok();toast("⚙️ 희귀 부품 발견! +"+fmt(g)+"G")}else toast("+"+fmt(g)+"G")},500);
+ const tm=setInterval(()=>{const l=cd-Date.now();$("#farm").disabled=l>0;$("#farm").textContent=l>0?"쿨타임 "+(l/1000).toFixed(1)+"s":"파밍하기";if(l<=0)clearInterval(tm)},100);
+};
+
+// ---------- 강화 ----------
+$("#up").onclick=()=>{
+ const n=me.lv+1;if(n>MAXLV||me.gold<cost(n))return;
+ me.gold-=cost(n);const r=Math.random()*100;
+ if(r<sr(n)){me.lv=n;fx.ok();toast("✨ 강화 성공! +"+n);if(n>=15)feed(`🔥 <b>${me.name}</b>님이 +${n}강 달성!`)}
+ else if(r>=100-de(n)){me.lv=0;me.ct=((me.ct||0)+1+rand(TYPES.length-1))%TYPES.length;fx.bad();toast("💥 파괴! +0강, 새 차량: "+TYPES[me.ct]);feed(`💥 <b>${esc(me.name)}</b>님의 차량이 +${n-1}강에서 파괴되어 ${TYPES[me.ct]}(으)로 바뀌었습니다!`)}
+ else if(r>=100-de(n)-dr(n)){const t=dt(n);fx.bad();if(t<me.lv){me.lv=t;toast("⬇ 강화 하락… +"+t)}else toast("실패! 단계 유지 (하락 보호)")}
+ else{fx.bad();toast("실패! 단계 유지")}
+ save();render()};
+
+// ---------- 상점 ----------
+document.addEventListener("click",e=>{
+ const b=e.target.closest("[data-b],[data-u],[data-r]");if(!b)return;
+ if(b.dataset.b){const i=SHOP.find(x=>x.id==b.dataset.b);if((me.tr||0)<i.c)return;me.tr-=i.c;me.cp=me.cp||{};me.cp[i.id]=(me.cp[i.id]||0)+1;fx.ok();toast(i.n+" 교환 완료");save();render()}
+ if(b.dataset.u){const i=SHOP.find(x=>x.id==b.dataset.u);me.cp[i.id]--;save();render();feed(`🎟 <b>${me.name}</b>님이 ${i.n}을(를) 사용했습니다!`)}
+ if(b.dataset.r)race(b.dataset.r)});
+
+// ---------- 레이스 ----------
+let rcd=0;const prizeOf=lv=>Math.round(0.1*cost(Math.min(lv+1,MAXLV))/100)*100;
+$("#rnd").onclick=()=>{if(Date.now()<rcd)return toast("경주 쿨타임 "+Math.ceil((rcd-Date.now())/1000)+"초 남음");const ids=Object.keys(users).filter(k=>k!=uid);if(!ids.length)return toast("경주할 상대가 없어요");rcd=Date.now()+10000;race(ids[rand(ids.length)])};
+function race(oid){
+ const o=users[oid];if(!o)return;
+ const win=me.lv==o.lv?Math.random()<.5:(me.lv>o.lv)==(Math.random()<.75);
+ $("#ov").style.display="flex";
+ $("#ovc").innerHTML=`<h3>🏁 ${esc(me.name)} vs ${esc(o.name)}</h3><div class="lane"><div class="c" id="c1"><div class="nt" style="color:var(--c)">${esc(me.name)}</div>${car(me.lv,me.ct)}</div></div><div class="lane"><div class="c" id="c2"><div class="nt" style="color:var(--m)">${esc(o.name)}</div>${car(o.lv,o.ct)}</div></div><div id="rs" style="text-align:center;font-weight:800;min-height:56px"></div><button class="big" id="cl" disabled>결과 확인 중…</button>`;
+ fx.go();const prize=prizeOf(me.lv);if(win){me.wins=(me.wins||0)+1;me.tr=(me.tr||0)+1;me.gold+=prize}else me.loss=(me.loss||0)+1;save();DB.set(`users/${oid}/${win?"loss":"wins"}`,((win?o.loss:o.wins)||0)+1);
+ setTimeout(()=>{const w=win?"c1":"c2",l=win?"c2":"c1";$("#"+w).style.left="calc(100% - 84px)";$("#"+l).style.left="calc(88% - 84px)"},100);
+ setTimeout(()=>{
+  const prize=prizeOf(me.lv);
+  if(win){fx.jack();$("#rs").innerHTML=`🏆 승리! 트로피 +1 / +${fmt(prize)}G`;feed(`🏁 <b>${me.name}</b>님이 <b>${o.name}</b>님을 레이스에서 이겼습니다!`)}
+  else{fx.bad();$("#rs").innerHTML="패배… 다음엔 이길 거예요!";feed(`🏁 <b>${o.name}</b>님이 <b>${me.name}</b>님의 도전을 막아냈습니다!`)}
+  render();$("#cl").disabled=false;$("#cl").textContent="닫기";$("#cl").onclick=()=>$("#ov").style.display="none"},3300)}
+
+// ---------- 새 버전 감시: Firebase config/version 값이 이 파일의 APP_VERSION과 다르면 새로고침 유도 ----------
+const SS={g:k=>{try{return sessionStorage.getItem(k)}catch(e){return null}},s:(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}},d:k=>{try{sessionStorage.removeItem(k)}catch(e){}}};
+let updShown=false;
+function checkVersion(v){
+ v=String(v||"").trim();
+ if(!v)return;
+ if(v===APP_VERSION){SS.d("mcv");return}
+ if(SS.g("mcv")===v){if(!updShown){updShown=true;toast("새 버전이 있어요. 계속 이 안내가 보이면 앱을 완전히 닫고 다시 열어 주세요.")}return}
+ if(updShown)return;updShown=true;
+ const go=()=>{SS.s("mcv",v);location.replace(location.pathname+"?v="+Date.now())};
+ $("#upd").style.display="flex";$("#rl").onclick=go;setTimeout(go,3000)}
+// ---------- 시작 ----------
+(async()=>{
+ if(firebaseConfig.apiKey){try{await ld("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");await ld("https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js");firebase.initializeApp(firebaseConfig);DB=F}catch(e){DB=L}}
+ $("#mode").textContent=DB==F?"● 온라인":"● 데모 모드(내 기기에만 저장)";
+ if(DB==L&&!L.get("users"))[["데모봇A",3],["데모봇B",9],["데모봇C",15]].forEach(([n,l],i)=>L.set("users/bot"+i,{name:n,gold:5000*l,lv:l,wins:l,loss:2,tr:0}));
+ let got;const gp=new Promise(r=>got=r);DB.sub("users",v=>{users=v||{};if(me&&users[uid])me=users[uid];render();got()});
+ DB.sub("feed",feedRender);
+ DB.sub("config/version",checkVersion);
+ const start=name=>{uid=uid||"u"+Date.now().toString(36)+rand(1e4);localStorage.mcuid=uid;me=users[uid]||{name,gold:50000,lv:0,wins:0,loss:0,tr:0,ticket:0,cp:{}};save();$("#ov").style.display="none";render()};
+ Promise.race([gp,new Promise(r=>setTimeout(r,4000))]).then(()=>{if(uid&&users[uid]){me=users[uid];if(me.ticket>0){me.gold+=3000*me.ticket;me.ticket=0;save();toast("하락 방지권이 폐지되어 골드로 환불되었습니다")}render()}else{$("#ov").style.display="flex";$("#ovc").innerHTML='<h3>🏎 닉네임을 입력하세요</h3><input id="ni" maxlength="10" placeholder="닉네임"><div id="er" class="s" style="color:#ff6b8a"></div><button class="big" id="ok">시작하기</button>';$("#ok").onclick=()=>{const v=$("#ni").value.trim();if(!v)return;if(Object.values(users).some(u=>(u.name||"").toLowerCase()==v.toLowerCase())){$("#er").textContent="이미 사용 중인 닉네임입니다. 다른 이름을 입력하세요.";return}start(v)}}});
+})();
+</script></body></html>
